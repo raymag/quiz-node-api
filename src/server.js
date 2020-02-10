@@ -4,7 +4,7 @@ const mongoose = require('mongoose')
 const routes = require('./routes') // includes the routes.js file
 const cors = require('cors') // includes cors module
 
-require('dotenv').config()
+// require('dotenv').config()
 
 app.use(cors()) // We're telling express to use CORS
 app.use(express.json()) // we need to tell server to use json as well
@@ -15,6 +15,6 @@ const db = mongoose.connection
 db.on('error', (error) => console.error(error))
 db.once('open', () => console.log('database connected'))
 
-app.listen(process.env.PORT | 3333, () => {
+app.listen(process.env.PORT, () => {
     console.log("The api is running...")
 })
