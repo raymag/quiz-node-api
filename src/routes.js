@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
+const mongoose = require('mongoose');
+
 const Question = require('./models/Question') // includes our model
+const Subject = require('./models/Subject')
 
 // get all quiz questions
 router.get('/questions', async (req, res) => {
@@ -17,7 +20,7 @@ router.get('/questions/:id', async (req, res) => {
     try {
         const _id = req.params.id 
 
-        const question = await Question.findOne({_id})        
+        const question = await (await Question.findOne({_id})).populate("subjects").execPopulate()       
         if(!question){
             return res.status(404).json({})
         }else{
@@ -49,19 +52,28 @@ router.post('/questions', async (req, res) => {
 router.put('/questions/:id', async (req, res) => {
     try {
         const _id = req.params.id 
-        const { description, alternatives } = req.body
+        const { description, alternatives, subjects } = req.body
 
         let question = await Question.findOne({_id})
 
         if(!question){
             question = await Question.create({
                 description,
-                alternatives
+                alternatives,
+                subjects
             })    
             return res.status(201).json(question)
         }else{
-            question.description = description
-            question.alternatives = alternatives
+            // updates only the given fields
+            if (description) {
+                question.description = description
+            }
+            if (alternatives) {
+                question.alternatives = alternatives
+            }
+            if (subjects) {
+                question.subjects = subjects.map((subject) => mongoose.Types.ObjectId(subject))
+            }
             await question.save()
             return res.status(200).json(question)
         }
@@ -87,5 +99,37 @@ router.delete('/questions/:id', async (req, res) => {
     }
 })
 
+//creates a new subject
+router.post('/subject', async (req, res) => {
+    try {
+        const {name} = req.body;
+        const subject = await Subject.create({name})
+        return res.status(200).json(subject)    
+    } catch (error) {
+        return res.status(500).json({"error":error})
+    }
+})
+
+//get all subjects
+router.get('/subject', async (req, res) => {
+    try {
+        const subjects = await Subject.find()
+        return res.status(200).json(subjects)
+    } catch (error) {
+        return res.status(500).json({"error":error})
+    }
+})
+
+//get all questions from a specific subject
+router.get('/question/subject/:id', async (req, res) => {
+    try {
+        const _id = req.params.id 
+
+        const questions = await Question.find({ subjects: _id });
+        return res.status(200).json(questions)
+    } catch (error) {
+        return res.status(500).json({"error":error})
+    }
+})
 
 module.exports = router

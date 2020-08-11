@@ -14,7 +14,12 @@ const QuestionSchema = new mongoose.Schema({
                 default: false
             }
         }
-    ]
+    ],
+    subjects: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Subject',
+        required: false
+    }]
 })
 
 module.exports = mongoose.model('Question', QuestionSchema)
